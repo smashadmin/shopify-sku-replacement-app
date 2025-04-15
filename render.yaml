@@ -1,0 +1,35 @@
+services:
+  # Web service
+  - type: web
+    name: shopify-sku-replacement
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromDatabase:
+          name: shopify-sku-db
+          property: connectionString
+      - key: SHOPIFY_API_KEY
+        sync: false
+      - key: SHOPIFY_API_SECRET_KEY
+        sync: false
+      - key: SHOPIFY_ACCESS_TOKEN
+        sync: false
+      - key: SHOPIFY_WEBHOOK_SECRET
+        sync: false
+      - key: SHOP_URL
+        sync: false
+      - key: HOST
+        sync: false
+
+# MongoDB database
+databases:
+  - name: shopify-sku-db
+    plan: free
+    databaseName: shopify-sku-replacement
