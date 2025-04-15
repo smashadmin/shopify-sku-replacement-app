@@ -1,69 +1,110 @@
-# MongoDB Atlas Setup Guide
+# Setting Up MongoDB Atlas for Your Shopify App
 
-This guide will help you set up a free MongoDB Atlas cluster for your Shopify SKU Replacement App.
+This guide provides step-by-step instructions for setting up a free MongoDB Atlas cluster for your Shopify SKU Replacement App.
 
-## Step 1: Create MongoDB Atlas Account
+## Why MongoDB Atlas?
+
+We're using MongoDB Atlas instead of Render's database service because:
+1. Render appears to be providing a PostgreSQL database instead of MongoDB
+2. Our application is built using Mongoose, which requires a MongoDB database
+3. MongoDB Atlas offers a free tier that's suitable for this application
+
+## Step 1: Create a MongoDB Atlas Account
 
 1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas/register)
-2. Sign up for a free account or login if you already have one
+2. Sign up for a free account or log in if you already have one
 
 ## Step 2: Create a Free Cluster
 
-1. Click "Build a Database"
-2. Select "FREE" plan (Shared)
-3. Select your preferred cloud provider (AWS, Google Cloud, or Azure)
-4. Select a region closest to your target audience
-5. Click "Create Cluster" (this may take a few minutes to provision)
+1. After logging in, click "Build a Database"
+2. Select the "FREE" plan (Shared)
+3. Choose your preferred cloud provider (AWS, Google Cloud, or Azure)
+4. Select a region closest to your users
+5. Click "Create Cluster"
+   - Cluster creation may take a few minutes
 
 ## Step 3: Set Up Database User
 
 1. In the left sidebar, click "Database Access" under Security
 2. Click "Add New Database User"
-3. Choose "Password" authentication method
-4. Enter a username and password (save these securely)
-5. Set privileges to "Read and write to any database"
+3. Use the "Password" authentication method
+4. Enter a username and strong password (make note of these!)
+5. Set database user privileges to "Atlas admin"
 6. Click "Add User"
 
-## Step 4: Set Up Network Access
+## Step 4: Configure Network Access
 
 1. In the left sidebar, click "Network Access" under Security
 2. Click "Add IP Address"
-3. For development, you can select "Allow Access from Anywhere" (not recommended for production)
-4. For production, add Render.com IP addresses or use the MongoDB Atlas integration
-5. Click "Confirm"
+3. For development, select "Allow Access from Anywhere" (0.0.0.0/0)
+   - Note: For production, you should limit access to specific IPs
+4. Click "Confirm"
 
-## Step 5: Get Connection String
+## Step 5: Get Your Connection String
 
-1. In the Clusters view, click "Connect"
+1. Once your cluster is created, click "Connect"
 2. Select "Connect your application"
-3. Select "Node.js" as your driver and choose the version
-4. Copy the connection string
-5. Replace `<password>` with your actual password and `<dbname>` with "shopify-sku-app"
+3. Choose "Node.js" as the driver and the appropriate version
+4. Copy the connection string that looks like:
+   ```
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/<dbname>?retryWrites=true&w=majority
+   ```
+5. Replace the placeholders:
+   - `<username>` with your database username
+   - `<password>` with your database password
+   - `<dbname>` with `shopify_sku_replacement`
 
-## Step 6: Update Environment Variables
+## Step 6: Configure Your Render Application
 
-In your Render.com dashboard:
+1. In your Render dashboard, go to your web service
+2. Click on the "Environment" tab
+3. Find the `MONGODB_URI` environment variable
+4. Update its value with your MongoDB Atlas connection string
+5. Click "Save Changes"
 
-1. Go to your web service
-2. Navigate to the "Environment" tab
-3. Add your MongoDB connection string as `MONGODB_URI`
+## Step 7: Deploy Your Application
 
-### Connection String Format Example
+1. Trigger a new deployment from your Render dashboard
+2. Monitor the deployment logs for successful MongoDB connection:
+   ```
+   Attempting to connect to MongoDB with URI: mongodb+srv://***:***@cluster0.xxxxx.mongodb.net/shopify_sku_replacement
+   Connected to MongoDB
+   ```
 
-```
-mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/shopify-sku-app?retryWrites=true&w=majority
-```
+## Troubleshooting
 
-## Alternative: Use Render MongoDB Integration
+### Connection Issues
 
-If you deployed via the Blueprint option in Render:
+If you see connection errors:
 
-1. Render automatically created a MongoDB database based on your `render.yaml`
-2. The connection string is automatically injected into your app
-3. You can find the connection details in your Render dashboard under the Databases section
+1. **Check your connection string format**:
+   - Ensure it starts with `mongodb+srv://`
+   - Verify that you've replaced all placeholders
+   - Make sure you've properly URL-encoded any special characters in the password
 
-## Testing the Connection
+2. **Network Access**:
+   - Verify that you've allowed access from Render's IP ranges
+   - Temporarily set to "Allow Access from Anywhere" for testing
 
-After deployment, check your application logs to verify:
-- "Connected to MongoDB" message indicates success
-- Connection errors will be logged and the app will retry automatically
+3. **Database User**:
+   - Confirm the username and password are correct
+   - Verify the user has appropriate permissions
+
+### Initialization Issues
+
+If database initialization fails:
+
+1. **Manual Initialization**:
+   - You can manually run initialization by connecting to your app's shell in Render
+   - Run `node server/scripts/init-db.js`
+
+2. **Database Name**:
+   - Ensure you're using `shopify_sku_replacement` as the database name
+
+## Next Steps
+
+After successful MongoDB Atlas setup:
+
+1. Test the application functionality
+2. Check that SKU mappings are being stored correctly
+3. Verify that order processing logs are being created
