@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { shopifyApi } = require('@shopify/shopify-api');
+const { shopifyApi, ApiVersion } = require('@shopify/shopify-api');
+const { restResources } = require('@shopify/shopify-api/rest/admin/2023-10');
+const { NodeAdapter } = require('@shopify/shopify-api/adapters/node');
 const SkuMapping = require('../models/SkuMapping');
 const ProcessingLog = require('../models/ProcessingLog');
 
@@ -171,8 +173,10 @@ const processOrder = async (order) => {
           'write_products'
         ],
         hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
-        apiVersion: '2023-10',
-        isEmbeddedApp: true
+        apiVersion: ApiVersion.October23,
+        isEmbeddedApp: true,
+        restResources,
+        adapter: new NodeAdapter()
       });
       
       // Execute GraphQL mutation
@@ -306,8 +310,10 @@ router.post('/register', async (req, res) => {
         'write_products'
       ],
       hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
-      apiVersion: '2023-10',
-      isEmbeddedApp: true
+      apiVersion: ApiVersion.October23,
+      isEmbeddedApp: true,
+      restResources,
+      adapter: new NodeAdapter()
     });
     
     const webhookResponse = await shopify.webhooks.register({

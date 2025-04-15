@@ -9,6 +9,9 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const path = require('path');
 
+// Fix Mongoose deprecation warning
+mongoose.set('strictQuery', false);
+
 // Import the SkuMapping model
 const SkuMapping = require('../models/SkuMapping');
 
@@ -30,7 +33,11 @@ async function initializeDatabase() {
   console.log('Connecting to MongoDB...');
   
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/shopify-sku-app', {
+    // Ensure MONGODB_URI has the correct format
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/shopify-sku-app';
+    console.log(`Attempting to connect to MongoDB with URI: ${mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')}`);
+    
+    await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });

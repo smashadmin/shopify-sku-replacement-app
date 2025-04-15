@@ -2,12 +2,17 @@ const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { shopifyApi } = require('@shopify/shopify-api');
+const { shopifyApi, ApiVersion } = require('@shopify/shopify-api');
+const { restResources } = require('@shopify/shopify-api/rest/admin/2023-10');
+const { NodeAdapter } = require('@shopify/shopify-api/adapters/node');
 const dotenv = require('dotenv');
 const path = require('path');
 
 // Load environment variables
 dotenv.config();
+
+// Fix Mongoose deprecation warning
+mongoose.set('strictQuery', false);
 
 // Initialize Express app
 const app = express();
@@ -33,8 +38,10 @@ const shopify = shopifyApi({
     'write_products'
   ],
   hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
-  apiVersion: '2023-10', // Use the latest API version
-  isEmbeddedApp: true
+  apiVersion: ApiVersion.October23, // Use the latest API version
+  isEmbeddedApp: true,
+  restResources,
+  adapter: new NodeAdapter()
 });
 
 // MongoDB connection with retry logic for cloud deployments
@@ -42,9 +49,13 @@ const connectWithRetry = async () => {
   const maxRetries = 5;
   let retries = 0;
   
+  // Ensure MONGODB_URI has the correct format
+  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/shopify-sku-app';
+  console.log(`Attempting to connect to MongoDB with URI: ${mongoUri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@')}`);
+  
   while (retries < maxRetries) {
     try {
-      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/shopify-sku-app', {
+      await mongoose.connect(mongoUri, {
         useNewUrlParser: true,
         useUnifiedTopology: true
       });
