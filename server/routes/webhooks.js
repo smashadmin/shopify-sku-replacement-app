@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
-const { Shopify } = require('@shopify/shopify-api');
+const { shopifyApi } = require('@shopify/shopify-api');
 const SkuMapping = require('../models/SkuMapping');
 const ProcessingLog = require('../models/ProcessingLog');
 
@@ -160,8 +160,23 @@ const processOrder = async (order) => {
         }
       ];
 
+      // Get shopify instance
+      const shopify = shopifyApi({
+        apiKey: process.env.SHOPIFY_API_KEY,
+        apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY,
+        scopes: [
+          'read_orders', 
+          'write_orders', 
+          'read_products', 
+          'write_products'
+        ],
+        hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
+        apiVersion: '2023-10',
+        isEmbeddedApp: true
+      });
+      
       // Execute GraphQL mutation
-      await Shopify.Clients.Graphql(session).query({
+      await shopify.clients.graphql(session).query({
         data: {
           query,
           variables: {
@@ -280,7 +295,22 @@ router.post('/register', async (req, res) => {
       accessToken: process.env.SHOPIFY_ACCESS_TOKEN,
     };
 
-    const webhookResponse = await Shopify.Webhooks.Registry.register({
+    // Get shopify instance
+    const shopify = shopifyApi({
+      apiKey: process.env.SHOPIFY_API_KEY,
+      apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY,
+      scopes: [
+        'read_orders', 
+        'write_orders', 
+        'read_products', 
+        'write_products'
+      ],
+      hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
+      apiVersion: '2023-10',
+      isEmbeddedApp: true
+    });
+    
+    const webhookResponse = await shopify.webhooks.register({
       path: '/api/webhooks/order-created',
       topic: 'orders/create',
       apiVersion: '2023-10',

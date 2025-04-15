@@ -2,7 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const { Shopify } = require('@shopify/shopify-api');
+const { shopifyApi } = require('@shopify/shopify-api');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'client/build')));
 
 // Initialize Shopify API
-const shopifyApi = new Shopify({
+const shopify = shopifyApi({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET_KEY,
   scopes: [
@@ -32,7 +32,7 @@ const shopifyApi = new Shopify({
     'read_products', 
     'write_products'
   ],
-  hostName: process.env.HOST.replace(/https?:\/\//, ''),
+  hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
   apiVersion: '2023-10', // Use the latest API version
   isEmbeddedApp: true
 });
