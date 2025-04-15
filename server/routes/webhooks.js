@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { Node: NodeAdapter } = require('@shopify/shopify-api/adapters');
 const SkuMapping = require('../models/SkuMapping');
 const ProcessingLog = require('../models/ProcessingLog');
 
@@ -174,8 +173,7 @@ const processOrder = async (order) => {
         hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
         apiVersion: LATEST_API_VERSION,
         isEmbeddedApp: true,
-        logger: { level: 0 },
-        adapter: new NodeAdapter()
+        logger: { level: 0 }
       });
       
       // Execute GraphQL mutation
@@ -311,8 +309,7 @@ router.post('/register', async (req, res) => {
       hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
       apiVersion: LATEST_API_VERSION,
       isEmbeddedApp: true,
-      logger: { level: 0 },
-      adapter: new NodeAdapter()
+      logger: { level: 0 }
     });
     
     const webhookResponse = await shopify.webhooks.register({

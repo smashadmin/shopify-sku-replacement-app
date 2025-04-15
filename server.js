@@ -3,7 +3,6 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const { shopifyApi, LATEST_API_VERSION } = require('@shopify/shopify-api');
-const { Node: NodeAdapter } = require('@shopify/shopify-api/adapters');
 const dotenv = require('dotenv');
 const path = require('path');
 
@@ -39,8 +38,7 @@ const shopify = shopifyApi({
   hostName: process.env.HOST ? process.env.HOST.replace(/https?:\/\//, '') : '',
   apiVersion: LATEST_API_VERSION, // Use the latest API version
   isEmbeddedApp: true,
-  logger: { level: 0 },
-  adapter: new NodeAdapter()
+  logger: { level: 0 }
 });
 
 // MongoDB connection with retry logic for cloud deployments
