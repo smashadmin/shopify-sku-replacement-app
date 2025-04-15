@@ -32,4 +32,4 @@ services:
 databases:
   - name: shopify-sku-db
     plan: free
-    databaseName: shopify-sku-replacement
+    databaseName: shopify_sku_replacement
