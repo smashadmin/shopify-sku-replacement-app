@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
 // Create a new SKU mapping
 router.post('/', async (req, res) => {
   try {
-    const { originalSku, replacementSku } = req.body;
+    const { originalSku, replacementSku, tags } = req.body;
     
     // Validate required fields
     if (!originalSku || !replacementSku) {
@@ -46,6 +46,7 @@ router.post('/', async (req, res) => {
     const newSkuMapping = new SkuMapping({
       originalSku,
       replacementSku,
+      tags: Array.isArray(tags) ? tags : [],
       active: true
     });
     
@@ -60,12 +61,18 @@ router.post('/', async (req, res) => {
 // Update a SKU mapping
 router.put('/:id', async (req, res) => {
   try {
-    const { originalSku, replacementSku, active } = req.body;
+    const { originalSku, replacementSku, tags, active } = req.body;
     
     // Find and update the mapping
     const updatedMapping = await SkuMapping.findByIdAndUpdate(
       req.params.id,
-      { originalSku, replacementSku, active, updatedAt: Date.now() },
+      { 
+        originalSku, 
+        replacementSku, 
+        tags: Array.isArray(tags) ? tags : undefined, 
+        active, 
+        updatedAt: Date.now() 
+      },
       { new: true, runValidators: true }
     );
     
@@ -113,7 +120,7 @@ router.post('/bulk', async (req, res) => {
     
     for (const mapping of mappings) {
       try {
-        const { originalSku, replacementSku } = mapping;
+        const { originalSku, replacementSku, tags } = mapping;
         
         if (!originalSku || !replacementSku) {
           results.failed++;
@@ -126,6 +133,9 @@ router.post('/bulk', async (req, res) => {
         if (existingMapping) {
           // Update existing mapping
           existingMapping.replacementSku = replacementSku;
+          if (Array.isArray(tags)) {
+            existingMapping.tags = tags;
+          }
           existingMapping.updatedAt = Date.now();
           await existingMapping.save();
         } else {
@@ -133,6 +143,7 @@ router.post('/bulk', async (req, res) => {
           const newMapping = new SkuMapping({
             originalSku,
             replacementSku,
+            tags: Array.isArray(tags) ? tags : [],
             active: true
           });
           await newMapping.save();

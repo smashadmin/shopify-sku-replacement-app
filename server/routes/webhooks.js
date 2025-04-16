@@ -23,29 +23,18 @@ const verifyShopifyWebhook = (req) => {
   );
 };
 
-// Process order and replace SKUs if needed
+/**
+ * Process order and replace SKUs if needed, based on per-mapping tags.
+ */
 const processOrder = async (order) => {
-  // Check if order has the "Free sample" tag
-  const hasFreeTag = order.tags && order.tags.split(',').some(tag => 
-    tag.trim().toLowerCase() === 'free sample'
-  );
-
-  if (!hasFreeTag) {
-    return {
-      orderId: order.id,
-      orderName: order.name,
-      status: 'success',
-      message: 'Order does not have the Free sample tag, no action taken',
-      replacements: []
-    };
-  }
+  // Parse order tags into an array of trimmed, lowercase tags
+  const orderTags = (order.tags || "")
+    .split(",")
+    .map(tag => tag.trim().toLowerCase())
+    .filter(tag => tag.length > 0);
 
   // Get all active SKU mappings
   const skuMappings = await SkuMapping.find({ active: true });
-  const mappingDict = {};
-  skuMappings.forEach(mapping => {
-    mappingDict[mapping.originalSku] = mapping.replacementSku;
-  });
 
   const replacements = [];
   const lineItemsToUpdate = [];
@@ -53,25 +42,35 @@ const processOrder = async (order) => {
   // Check each line item for SKUs that need replacement
   if (order.line_items && order.line_items.length > 0) {
     for (const item of order.line_items) {
-      // Check if the item has a SKU that needs replacement and has price 0
-      if (
-        item.sku && 
-        mappingDict[item.sku] && 
-        (parseFloat(item.price) === 0 || item.price === '0.00')
-      ) {
+      if (!item.sku) continue;
+
+      // Find all mappings for this SKU where the order contains at least one of the mapping's tags
+      const applicableMappings = skuMappings.filter(mapping => {
+        if (mapping.originalSku !== item.sku) return false;
+        if (!Array.isArray(mapping.tags) || mapping.tags.length === 0) return false;
+        // Check for intersection between orderTags and mapping.tags (case-insensitive)
+        return mapping.tags.some(mappingTag =>
+          orderTags.includes(mappingTag.trim().toLowerCase())
+        );
+      });
+
+      // If there is at least one applicable mapping, use the first one (or could support multiple)
+      if (applicableMappings.length > 0) {
+        const mapping = applicableMappings[0];
         // Add to replacements for logging
         replacements.push({
           originalSku: item.sku,
-          replacementSku: mappingDict[item.sku],
+          replacementSku: mapping.replacementSku,
           lineItemId: item.id,
           productId: item.product_id,
-          variantId: item.variant_id
+          variantId: item.variant_id,
+          triggeredByTags: mapping.tags
         });
 
         // Add to items that need updating
         lineItemsToUpdate.push({
           id: item.id,
-          sku: mappingDict[item.sku],
+          sku: mapping.replacementSku,
           originalSku: item.sku
         });
       }
@@ -84,7 +83,7 @@ const processOrder = async (order) => {
       orderId: order.id,
       orderName: order.name,
       status: 'success',
-      message: 'No SKUs found that need replacement',
+      message: 'No SKUs found that need replacement for the order tags',
       replacements: []
     };
   }

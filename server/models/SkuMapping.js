@@ -12,6 +12,10 @@ const SkuMappingSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  tags: {
+    type: [String], // Array of tags that trigger this mapping
+    default: []
+  },
   active: {
     type: Boolean,
     default: true

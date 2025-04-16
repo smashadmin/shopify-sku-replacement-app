@@ -67,16 +67,22 @@
             <div class="card-body">
               <form id="add-mapping-form">
                 <div class="row">
-                  <div class="col-md-5 mb-3">
+                  <div class="col-md-4 mb-3">
                     <label for="originalSku" class="form-label">Original SKU</label>
                     <input type="text" class="form-control" id="originalSku" required>
                   </div>
-                  <div class="col-md-5 mb-3">
+                  <div class="col-md-4 mb-3">
                     <label for="replacementSku" class="form-label">Replacement SKU</label>
                     <input type="text" class="form-control" id="replacementSku" required>
                   </div>
-                  <div class="col-md-2 d-flex align-items-end mb-3">
-                    <button type="submit" class="btn btn-primary w-100">Add Mapping</button>
+                  <div class="col-md-4 mb-3">
+                    <label for="tags" class="form-label">Tags (comma separated)</label>
+                    <input type="text" class="form-control" id="tags" placeholder="free sample, special">
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Add Mapping</button>
                   </div>
                 </div>
               </form>
@@ -94,8 +100,8 @@
             <div class="card-body">
               <form id="bulk-import-form">
                 <div class="mb-3">
-                  <label for="bulkMappings" class="form-label">Enter one mapping per line in format: OriginalSKU,ReplacementSKU</label>
-                  <textarea class="form-control" id="bulkMappings" rows="5" placeholder="SM-NOX-1-3,SM-NOX-1-1&#10;SM-NOX-1-2,SM-NOX-1-1"></textarea>
+                  <label for="bulkMappings" class="form-label">Enter one mapping per line in format: OriginalSKU,ReplacementSKU,Tag1,Tag2,...</label>
+                  <textarea class="form-control" id="bulkMappings" rows="5" placeholder="SM-NOX-1-3,SM-NOX-1-1,free sample&#10;SM-NOX-1-2,SM-NOX-1-1,special,gift"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Import Mappings</button>
               </form>
@@ -120,6 +126,7 @@
                     <tr>
                       <th>Original SKU</th>
                       <th>Replacement SKU</th>
+                      <th>Tags</th>
                       <th>Status</th>
                       <th>Last Updated</th>
                       <th>Actions</th>
@@ -214,6 +221,10 @@
             <div class="mb-3">
               <label for="edit-replacement-sku" class="form-label">Replacement SKU</label>
               <input type="text" class="form-control" id="edit-replacement-sku" required>
+            </div>
+            <div class="mb-3">
+              <label for="edit-tags" class="form-label">Tags (comma separated)</label>
+              <input type="text" class="form-control" id="edit-tags" placeholder="free sample, special">
             </div>
             <div class="mb-3 form-check">
               <input type="checkbox" class="form-check-input" id="edit-active">

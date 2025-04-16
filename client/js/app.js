@@ -78,6 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   async function createMapping(mappingData) {
     try {
+      // Ensure tags is an array if provided
+      if (mappingData.tags && typeof mappingData.tags === 'string') {
+        mappingData.tags = mappingData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      }
+      
       const response = await fetch('/api/sku-mappings', {
         method: 'POST',
         headers: {
@@ -103,6 +108,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   async function updateMapping(id, mappingData) {
     try {
+      // Ensure tags is an array if provided
+      if (mappingData.tags && typeof mappingData.tags === 'string') {
+        mappingData.tags = mappingData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+      }
+      
       const response = await fetch(`/api/sku-mappings/${id}`, {
         method: 'PUT',
         headers: {
@@ -148,6 +158,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   async function bulkImportMappings(mappings) {
     try {
+      // Process each mapping to ensure tags are in the right format
+      mappings.forEach(mapping => {
+        if (mapping.tags && typeof mapping.tags === 'string') {
+          mapping.tags = mapping.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        }
+      });
+      
       const response = await fetch('/api/sku-mappings/bulk', {
         method: 'POST',
         headers: {
@@ -235,6 +252,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const replacementSkuTd = document.createElement('td');
       replacementSkuTd.innerHTML = `<span class="badge bg-primary sku-badge">${mapping.replacementSku}</span>`;
       
+      // Add tags cell
+      const tagsTd = document.createElement('td');
+      if (mapping.tags && mapping.tags.length > 0) {
+        mapping.tags.forEach(tag => {
+          const tagBadge = document.createElement('span');
+          tagBadge.className = 'badge bg-info me-1 mb-1';
+          tagBadge.textContent = tag;
+          tagsTd.appendChild(tagBadge);
+        });
+      } else {
+        tagsTd.innerHTML = '<span class="text-muted">No tags</span>';
+      }
+      
       const statusTd = document.createElement('td');
       if (mapping.active) {
         statusTd.innerHTML = '<span class="badge bg-success">Active</span>';
@@ -257,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       tr.appendChild(originalSkuTd);
       tr.appendChild(replacementSkuTd);
+      tr.appendChild(tagsTd);
       tr.appendChild(statusTd);
       tr.appendChild(updatedAtTd);
       tr.appendChild(actionsTd);
@@ -273,6 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
           document.getElementById('edit-mapping-id').value = mapping._id;
           document.getElementById('edit-original-sku').value = mapping.originalSku;
           document.getElementById('edit-replacement-sku').value = mapping.replacementSku;
+          document.getElementById('edit-tags').value = mapping.tags ? mapping.tags.join(', ') : '';
           document.getElementById('edit-active').checked = mapping.active;
           editMappingModal.show();
         }
@@ -462,10 +494,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const originalSku = document.getElementById('originalSku').value.trim();
     const replacementSku = document.getElementById('replacementSku').value.trim();
+    const tags = document.getElementById('tags').value.trim();
     
     const newMapping = await createMapping({
       originalSku,
-      replacementSku
+      replacementSku,
+      tags
     });
     
     if (newMapping) {
@@ -491,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!trimmedLine) continue;
       
       const parts = trimmedLine.split(',');
-      if (parts.length !== 2) {
+      if (parts.length < 2) {
         showAlert('warning', `Invalid mapping format: ${trimmedLine}`);
         continue;
       }
@@ -504,9 +538,13 @@ document.addEventListener('DOMContentLoaded', function() {
         continue;
       }
       
+      // All parts after the first two are considered tags
+      const tags = parts.slice(2).map(tag => tag.trim()).filter(tag => tag);
+      
       mappings.push({
         originalSku,
-        replacementSku
+        replacementSku,
+        tags
       });
     }
     
@@ -526,11 +564,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const id = document.getElementById('edit-mapping-id').value;
     const originalSku = document.getElementById('edit-original-sku').value.trim();
     const replacementSku = document.getElementById('edit-replacement-sku').value.trim();
+    const tags = document.getElementById('edit-tags').value.trim();
     const active = document.getElementById('edit-active').checked;
     
     const updatedMapping = await updateMapping(id, {
       originalSku,
       replacementSku,
+      tags,
       active
     });
     
